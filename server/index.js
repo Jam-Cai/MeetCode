@@ -540,12 +540,12 @@ process.on('SIGINT', () => {
 //     }
 // })
 
-process.on('SIGINT', async () => {
-  try {
-    await redisClient.quit();
-    console.log('Redit client disconnected');
-    process.exit(0);
-  } catch (err) {
-    console.error('Error during shutdown', err);
-    process.exit(1);
-  }})
+// process.on('SIGINT', async () => {
+//   try {
+//     await redisClient.quit();
+//     console.log('Redit client disconnected');
+//     process.exit(0);
+//   } catch (err) {
+//     console.error('Error during shutdown', err);
+//     process.exit(1);
+//   }})
