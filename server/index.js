@@ -1,8 +1,6 @@
 const path = require("path")
 const express = require("express")
 const session = require('express-session')
-const { RedisStore } = require('connect-redis')
-const { createClient } = require('redis')
 const mongoose = require('mongoose')
 const cors = require("cors")
 const multer = require('multer');
@@ -26,13 +24,7 @@ const dataSchema = new Schema({
 
 const Data = model('aggregated-data', dataSchema);
 
-// Initialize Redie client
-let redisClient = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379'
-})
-redisClient.connect().catch(console.error)
-
-const VOICE = "echo"
+// const VOICE = "echo"
 /** todos 
  * macro:
  *  - Info for analytics page
@@ -88,8 +80,9 @@ app.use(express.static(path.join(__dirname, "public")))
 
 const PORT = process.env.PORT
 
+// Modify sessionMiddleware to use the default MemoryStore.
 const sessionMiddleware = session({
-  store: new RedisStore({ client: redisClient }),
+  // Removed store: new RedisStore({ client: redisClient }),
   secret: 'secret-key',
   resave: false,
   saveUninitialized: true,
@@ -98,13 +91,13 @@ const sessionMiddleware = session({
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true
   }
-})
+});
 
 app.use(sessionMiddleware)
 
-redisClient.on('error', (err) => {
-  console.error('Redis error:', err)
-})
+// Removed: redisClient.on('error', (err) => {
+//   console.error('Redis error:', err)
+// })
 
 const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
@@ -537,6 +530,13 @@ app.get('*', (req, res) => {
 //         res.json({ error: "404 not foundx" })
 //     } else {
 //         res.type("txt").send("404 not found")
+//     }
+// })
+
+process.on('SIGINT', () => {
+  console.log('Server shutting down');
+  process.exit(0);
+});
 //     }
 // })
 
