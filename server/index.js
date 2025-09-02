@@ -479,9 +479,9 @@ process.on('SIGINT', () => {
 //   } catch (err) {
 //     console.error('Error during shutdown', err);
 //     process.exit(1);
-//   }})
-  }
-});
+// //   }})
+//   }
+// });
 
 // Average Interview Time
 app.get('/api/admin/averageinterviewtime', async (req, res) => {
