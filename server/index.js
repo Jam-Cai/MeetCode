@@ -1,7 +1,6 @@
 const path = require("path")
 const express = require("express")
 const session = require('express-session')
-const mongoose = require('mongoose')
 const cors = require("cors")
 const multer = require('multer');
 const socketIO = require('socket.io');
@@ -13,16 +12,16 @@ const { Readable } = require('stream');
 const { start } = require("repl")
 
 // User Schema
-const { Schema, model } = mongoose;
+// const { Schema, model } = mongoose;
 
-const dataSchema = new Schema({
-  interviewTime: { 
-    type: Number, 
-    default: 0 
-  },
-});
+// const dataSchema = new Schema({
+//   interviewTime: { 
+//     type: Number, 
+//     default: 0 
+//   },
+// });
 
-const Data = model('aggregated-data', dataSchema);
+// const Data = model('aggregated-data', dataSchema);
 
 // const VOICE = "echo"
 /** todos 
@@ -118,23 +117,7 @@ io.on('connection', (socket) => {
     const diff = Math.ceil(((endTime - startTime) / 1000) / 125) * 125;
     console.log(diff);
 
-  
-      
-      try {
-        await mongoose.connect(process.env.MONGODB_URL);
-        console.log("Connected to MongoDB");
-
-        const newData = new Data({
-          interviewTime: diff
-        })
-
-        await newData.save();
-        console.log("Analysis Saved");
-      } catch (error) {
-        console.error("Error:", error);
-      } finally {
-        await mongoose.connection.close();
-      }
+    // removed MongoDB logic; no database operations performed upon disconnect.
   });
 });
 
@@ -452,34 +435,51 @@ app.post('/api/start', async (req, res) => {
 })
 
 
-// Admin endpoints for interview analytics
+// Delete these lines:
+// app.all('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// });
+// app.use(express.static('dist'))
 
-// Total Interview Time
-app.get('/api/admin/totalinterviewtime', async (req, res) => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URL);
-    const result = await Data.aggregate([
-      { $group: { _id: null, totalTime: { $sum: "$interviewTime" } } }
-    ]);
-    const totalTime = result[0] ? result[0].totalTime : 0;
-    res.json({ totalInterviewTime: totalTime });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  } finally {
-    await mongoose.connection.close();
-  }
+// Add these lines at the end of the file, after all API routes:
+// Serve static files from client build
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Handle client-side routing - this needs to be the LAST route
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
+// app.use(express.static('dist'))
 
-// Total Number of Interviews
-app.get('/api/admin/totalnumberinterviews', async (req, res) => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URL);
-    const totalInterviews = await Data.countDocuments({});
-    res.json({ totalNumberInterviews: totalInterviews });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  } finally {
-    await mongoose.connection.close();
+// // if none of the above, serve 404 page
+// app.all("*", (req, res) => {
+//     res.status(404)
+    
+//     if (req.accepts("html")) {
+//         res.sendFile(path.join(__dirname, "views", "404.html")) 
+//     } else if (req.accepts("html")) {
+//         res.json({ error: "404 not foundx" })
+//     } else {
+//         res.type("txt").send("404 not found")
+//     }
+// })
+
+process.on('SIGINT', () => {
+  console.log('Server shutting down');
+  process.exit(0);
+});
+//     }
+// })
+
+// process.on('SIGINT', async () => {
+//   try {
+//     await redisClient.quit();
+//     console.log('Redit client disconnected');
+//     process.exit(0);
+//   } catch (err) {
+//     console.error('Error during shutdown', err);
+//     process.exit(1);
+//   }})
   }
 });
 
